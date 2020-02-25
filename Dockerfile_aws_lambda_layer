@@ -1,0 +1,50 @@
+# 1. Build stage
+FROM lambci/lambda:build-python3.8 AS build
+
+RUN yum update -y && \
+    yum install -y \
+    cmake3 && \
+    yum clean all && rm -rf /var/cache/yum
+
+WORKDIR /build
+
+RUN pip install --no-binary :all: numpy && \
+    pip install --no-binary :all: cython
+
+RUN rm /usr/bin/cmake && ln -s /usr/bin/cmake3 /usr/bin/cmake
+
+RUN curl -LO "https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-5.0.1/CGAL-5.0.1-library.tar.xz" \
+    && tar xf CGAL-5.0.1-library.tar.xz
+
+RUN curl -LO "https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz" \
+    && tar xf gmp-6.2.0.tar.xz
+
+RUN curl -LO "https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz" \
+    && tar xf boost_1_72_0.tar.gz \
+    && cd boost_1_72_0 \
+    && ./bootstrap.sh --prefix=/build/boost \
+    && ./b2 install \
+    && cd ..
+
+RUN yum install -y gmp-devel
+RUN yum install -y mpfr-devel
+
+RUN export BOOST_ROOT=/build/boost \
+    && curl -LO "https://github.com/GUDHI/gudhi-devel/releases/download/tags%2Fgudhi-release-3.1.1/gudhi.3.1.1.tar.gz" \
+    && tar xf gudhi.3.1.1.tar.gz \
+    && cd gudhi.3.1.1 \
+    && mkdir build \
+    && cd build \
+    && cmake -DPython_ADDITIONAL_VERSIONS=3 -DCGAL_DIR=/build/CGAL-5.0.1 -DCMAKE_BUILD_TYPE=Release .. \
+    && cd python \
+    && make \
+    && find . -name "*.so" | xargs strip \
+    && cd .. \
+    && zip -r -9 -q /build/gudhi.zip python/ \
+    && rm -rf /root/.cache /var/cache/yum && yum clean all
+
+# 2. Copy Data Stage
+FROM amazonlinux:2017.03.1.20170812
+WORKDIR /build
+COPY --from=build /build/gudhi.zip .
+CMD cp /build/gudhi.zip /outputs
