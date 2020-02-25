@@ -35,7 +35,7 @@ RUN export BOOST_ROOT=/build/boost \
     && cd gudhi.3.1.1 \
     && mkdir build \
     && cd build \
-    && cmake -DPython_ADDITIONAL_VERSIONS=3 -DCGAL_DIR=/build/CGAL-5.0.1 -DCMAKE_BUILD_TYPE=Release .. \
+    && cmake -DPython_ADDITIONAL_VERSIONS=3 -DCGAL_DIR=/build/CGAL-5.0.1 -DCGAL_HEADER_ONLY=ON -DCMAKE_BUILD_TYPE=Release .. \
     && cd python \
     && make \
     && find . -name "*.so" | xargs strip \
