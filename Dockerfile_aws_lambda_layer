@@ -39,7 +39,10 @@ RUN export BOOST_ROOT=/build/boost \
     && cd python \
     && make \
     && find . -name "*.so" | xargs strip \
+    # TODO: remove python/build/temp.linux-x86_64-3.8
     && cd .. \
+    && mkdir -p python/lib \
+    && cp /usr/lib64/libmpfr.so.4 python/lib \
     && zip -r -9 -q /build/gudhi.zip python/ \
     && rm -rf /root/.cache /var/cache/yum && yum clean all
 
