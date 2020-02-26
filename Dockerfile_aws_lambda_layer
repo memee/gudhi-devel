@@ -47,7 +47,7 @@ RUN export BOOST_ROOT=/build/boost \
     && rm -rf /root/.cache /var/cache/yum && yum clean all
 
 # 2. Copy Data Stage
-FROM amazonlinux:2017.03.1.20170812
+FROM lambci/lambda:build-python3.8
 WORKDIR /build
 COPY --from=build /build/gudhi.zip .
 CMD cp /build/gudhi.zip /outputs
